@@ -1,14 +1,22 @@
-Package: ettie2
-Title: New excellent project!
+Package: ettie
+Title: Tactical football nugget search
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Bruno",
+           family = "Marques",
            role = c("aut", "cre"),
-           email = "first.last@example.com")
-Description: What the package does (one paragraph).
-License: What license it uses
+           email = "bomarques@inf.ufrgs.br")
+Description: Searches for factors that can separate victory from defeat in football matches.
+License: MPL-2.0
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    packrat
+    packrat,
+    fst,
+    jsonlite,
+    data.table,
+    tidyverse
+Remotes:
+    statsbomb/StatsBombR
+URL: https://github.com/ElSaico/ettie
+BugReports: https://github.com/ElSaico/ettie/issues

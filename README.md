@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# ettie2
+# ettie
 
 <!-- badges: start -->
 
@@ -9,10 +9,10 @@
 has not yet been a stable, usable release suitable for the
 public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 [![Travis build
-status](https://travis-ci.org/ElSaico/ettie2.svg?branch=master)](https://travis-ci.org/ElSaico/ettie2)
+status](https://travis-ci.org/ElSaico/ettie.svg?branch=master)](https://travis-ci.org/ElSaico/ettie)
 <!-- badges: end -->
 
-The goal of ettie2 is to …
+The goal of ettie is to …
 
 ## Installation
 
