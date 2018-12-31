@@ -18,16 +18,15 @@ library(ggplot2)
 
 events.phased <- events %>%
   group_by(OffensivePhase=rleid(match_id, period, possession_team.id)) %>%
-  mutate(TimeInOffensivePhase=max(ElapsedTime) - min(ElapsedTime))
+  mutate(TimeInOffensivePhase=max(ElapsedTime) - min(ElapsedTime)) %>%
+  ungroup()
 
-offensive.phases <- unique(events.phased[,c('OffensivePhase', 'TimeInOffensivePhase')])
+offensive.phases <- unique(events.phased[,c('match_id', 'possession_team.name', 'OffensivePhase', 'TimeInOffensivePhase')])
 row.names(offensive.phases) <- offensive.phases$OffensivePhase
 
 events.phased$TimeInLastDefensivePhase <- add_row(
   offensive.phases[events.phased$OffensivePhase-1, 'TimeInOffensivePhase'],
-  TimeInOffensivePhase=rep(
-    0, tally(events.phased[events.phased$OffensivePhase == 1,])$n
-  ),
+  TimeInOffensivePhase=rep(0, tally(events.phased[events.phased$OffensivePhase == 1,])$n),
   .before=1
 )$TimeInOffensivePhase
 
@@ -41,3 +40,23 @@ events.phased %>%
   filter(shot.outcome.name == 'Goal') %>%
   ggplot(aes(x=TimeInLastDefensivePhase)) + geom_density()
 ```
+
+Mas talvez isso valha pra todos os chutes, não só os que deram em gol?
+
+```{r}
+ggplot() +
+  geom_density(data=filter(events.phased, type.name == 'Shot'), aes(x=TimeInLastDefensivePhase), colour='blue') +
+  geom_density(data=filter(events.phased, shot.outcome.name == 'Goal'), aes(x=TimeInLastDefensivePhase), colour='green')
+```
+
+```{r}
+offensive.phases <- offensive.phases %>%
+  group_by(match_id) %>%
+  mutate(TotalPossessionTime=cumsum(TimeInOffensivePhase) - TimeInOffensivePhase) %>%
+  group_by(possession_team.name) %>%
+  mutate(TimeInPreviousOffensivePhases=cumsum(TimeInOffensivePhase) - TimeInOffensivePhase) %>%
+  ungroup()
+offensive.phases <- left_join(events.phased, offensive.phases, by='OffensivePhase') %>%
+  mutate(PossessionRate=(TimeInPreviousOffensivePhases+TimeInPoss) / (TotalPossessionTime+TimeInPoss))
+```
+
