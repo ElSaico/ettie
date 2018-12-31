@@ -1,0 +1,43 @@
+---
+title: "Exploration"
+---
+
+```{r}
+library(fst)
+
+events <- read.fst('../data/events-20181230.fst')
+```
+
+## Tempo de reação defensiva (Vogelbein et al., 2014)
+
+Tempo total de duração da fase defensiva de um time (Barreira et al., 2013)
+
+```{r}
+library(data.table)
+library(ggplot2)
+
+events.phased <- events %>%
+  group_by(OffensivePhase=rleid(match_id, period, possession_team.id)) %>%
+  mutate(TimeInOffensivePhase=max(ElapsedTime) - min(ElapsedTime))
+
+offensive.phases <- unique(events.phased[,c('OffensivePhase', 'TimeInOffensivePhase')])
+row.names(offensive.phases) <- offensive.phases$OffensivePhase
+
+events.phased$TimeInLastDefensivePhase <- add_row(
+  offensive.phases[events.phased$OffensivePhase-1, 'TimeInOffensivePhase'],
+  TimeInOffensivePhase=rep(
+    0, tally(events.phased[events.phased$OffensivePhase == 1,])$n
+  ),
+  .before=1
+)$TimeInOffensivePhase
+
+first.period.phases <- events.phased %>%
+  group_by(match_id, period) %>%
+  summarize(FirstPhase=first(OffensivePhase)) %>%
+  pull(FirstPhase)
+events.phased[events.phased$OffensivePhase %in% first.period.phases, 'TimeInLastDefensivePhase'] <- 0
+
+events.phased %>%
+  filter(shot.outcome.name == 'Goal') %>%
+  ggplot(aes(x=TimeInLastDefensivePhase)) + geom_density()
+```
