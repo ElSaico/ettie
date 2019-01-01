@@ -6,6 +6,7 @@ title: "Exploration"
 library(fst)
 
 events <- read.fst('../data/events-20181231.fst')
+matches <- read.fst('../data/matches-20181231.fst')
 ```
 
 ## Tempo de reação defensiva (Vogelbein et al., 2014)
@@ -97,5 +98,11 @@ metrics <- events.phased %>%
   group_by(match_id, team.name) %>%
   summarise(avg.recovery.time=mean(TimeInLastDefensivePhase)) %>%
   full_join(metrics)
+```
+
+```{r}
+matches <- matches %>%
+  inner_join(metrics, c('match_id', 'home_team.home_team_name' = 'team.name')) %>%
+  inner_join(metrics, c('match_id', 'away_team.away_team_name' = 'team.name'), suffix=c('.home', '.away'))
 ```
 
