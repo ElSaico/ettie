@@ -5,7 +5,7 @@ title: "Exploration"
 ```{r}
 library(fst)
 
-events <- read.fst('../data/events-20181230.fst')
+events <- read.fst('../data/events-20181231.fst')
 ```
 
 ## Tempo de reação defensiva (Vogelbein et al., 2014)
@@ -14,6 +14,7 @@ Tempo total de duração da fase defensiva de um time (Barreira et al., 2013)
 
 ```{r}
 library(data.table)
+library(dplyr)
 library(ggplot2)
 
 events.phased <- events %>%
@@ -53,11 +54,11 @@ ggplot() +
 offensive.phases <- offensive.phases %>%
   group_by(match_id) %>%
   mutate(TotalPossessionTime=cumsum(TimeInOffensivePhase) - TimeInOffensivePhase) %>%
-  group_by(possession_team.name) %>%
+  group_by(possession_team.name, add=TRUE) %>%
   mutate(TimeInPreviousOffensivePhases=cumsum(TimeInOffensivePhase) - TimeInOffensivePhase) %>%
   ungroup()
 
-offensive.phases <- left_join(events.phased, offensive.phases, by='OffensivePhase') %>%
+offensive.phases <- left_join(events.phased, offensive.phases) %>%
   mutate(PossessionRate=(TimeInPreviousOffensivePhases+TimeInPoss) / (TotalPossessionTime+TimeInPoss))
 
 offensive.phases <- offensive.phases %>%
