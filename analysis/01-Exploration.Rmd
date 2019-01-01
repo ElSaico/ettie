@@ -56,7 +56,19 @@ offensive.phases <- offensive.phases %>%
   group_by(possession_team.name) %>%
   mutate(TimeInPreviousOffensivePhases=cumsum(TimeInOffensivePhase) - TimeInOffensivePhase) %>%
   ungroup()
+
 offensive.phases <- left_join(events.phased, offensive.phases, by='OffensivePhase') %>%
   mutate(PossessionRate=(TimeInPreviousOffensivePhases+TimeInPoss) / (TotalPossessionTime+TimeInPoss))
+
+offensive.phases <- offensive.phases %>%
+  filter(team.id == possession_team.id) %>%
+  group_by(PlayerPossession=rleid(OffensivePhase, player.id)) %>%
+  transmute(id, PlayerPossessionTime=max(ElapsedTime) - min(ElapsedTime)) %>%
+  ungroup() %>%
+  right_join(offensive.phases, 'id')
+```
+
+```{r}
+br.bl <- offensive.phases %>% filter(match_id == 8650)
 ```
 

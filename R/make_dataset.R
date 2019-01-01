@@ -11,6 +11,7 @@ make.dataset <- function() {
 
   match.files <- dir("data/statsbomb/data/matches", full.names = TRUE)
   matches <- bind_rows(future_lapply(match.files, fromJSON, flatten = TRUE))
+  write.fst(matches, format(Sys.Date(), "data/matches-%Y%m%d.fst"))
 
   load.events <- function(match) {
     sprintf("data/statsbomb/data/events/%d.json", as.numeric(match["match_id"])) %>%
