@@ -1,7 +1,9 @@
 library(mlr)
 
-run.benchmark <- function(seed = 8080) {
+run.benchmark <- function(matches, metrics, seed = 8080) {
   set.seed(seed, "L'Ecuyer")
+  input.by.match <- build.input(matches, metrics)
+  input.by.match.and.team <- build.input(matches, metrics, TRUE)
 
   pred.tasks <- list(
     makeClassifTask("match", input.by.match, "result"),
