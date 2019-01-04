@@ -1,0 +1,104 @@
+---
+title: "Learning"
+---
+
+```{r}
+metrics <- events.phased %>%
+  group_by(match_id, team.name) %>%
+  summarise(shots=sum(type.name == 'Shot'),
+            expulsions=sum(foul_committed.card.name %in% c('Red Card', 'Second Yellow')) + sum(bad_behaviour.card.name %in% c('Red Card', 'Second Yellow')),
+            passes=sum(type.name == 'Pass'),
+            successful.passes=sum(type.name == 'Ball Receipt*'),
+            corners=sum(pass.type.name == 'Corner', na.rm=TRUE),
+            fouls=sum(type.name == 'Foul Committed'),
+            avg.team.possession=mean(PossessionRate, na.rm=TRUE))
+
+metrics <- events.phased %>%
+  select(match_id, possession_team.name, PlayerPossession, PlayerPossessionTime) %>%
+  rename(team.name=possession_team.name) %>%
+  distinct() %>%
+  na.omit() %>%
+  group_by(match_id, team.name) %>%
+  summarise(avg.player.possession=mean(PlayerPossessionTime)) %>%
+  full_join(metrics)
+
+metrics <- events.phased %>%
+  select(match_id, possession_team.name, OffensivePhase, TimeInLastDefensivePhase) %>%
+  rename(team.name=possession_team.name) %>%
+  distinct() %>%
+  na.omit() %>%
+  group_by(match_id, team.name) %>%
+  summarise(avg.recovery.time=mean(TimeInLastDefensivePhase)) %>%
+  full_join(metrics)
+```
+
+```{r}
+input.by.match <- matches %>%
+  inner_join(metrics, c('match_id', 'home_team.home_team_name' = 'team.name')) %>%
+  inner_join(metrics, c('match_id', 'away_team.away_team_name' = 'team.name'), suffix=c('.home', '.away')) %>%
+  mutate(result=factor(case_when(home_score > away_score ~ 'home', home_score < away_score ~ 'away', TRUE ~ 'draw'))) %>%
+  select(result, ends_with('.home'), ends_with('.away'))
+
+input.by.match.and.team <- rbind(
+  matches %>%
+    inner_join(metrics, c('match_id', 'home_team.home_team_name' = 'team.name')) %>%
+    mutate(home=as.numeric(competition.competition_name != 'FIFA World Cup'), result=factor(case_when(home_score > away_score ~ 'win', home_score < away_score ~ 'loss', TRUE ~ 'draw'))) %>%
+    select(result, home, avg.recovery.time, avg.player.possession, avg.team.possession, shots, expulsions, passes, successful.passes, corners, fouls),
+  matches %>%
+    inner_join(metrics, c('match_id', 'away_team.away_team_name' = 'team.name')) %>%
+    mutate(home=0, result=factor(case_when(home_score < away_score ~ 'win', home_score > away_score ~ 'loss', TRUE ~ 'draw'))) %>%
+    select(result, home, avg.recovery.time, avg.player.possession, avg.team.possession, shots, expulsions, passes, successful.passes, corners, fouls)
+)
+```
+
+
+```{r}
+library(mlr)
+library(parallelMap)
+
+#parallelStartMulticore()
+
+multiclass.mcc <- makeMeasure(
+  id='multiclass.mcc',
+  name='Multiclass Matthews correlation coefficient',
+  minimize=FALSE,
+  properties=c('classif', 'classif.multi', 'req.pred', 'req.truth'),
+  best=1,
+  worst=-1,
+  fun=function (task, model, pred, feats, extra.args) {
+    yardstick::mcc(getTaskData(task), getPredictionTruth(pred), getPredictionResponse(pred))$.estimate
+  }
+)
+```
+
+```{r}
+set.seed(8080, "L'Ecuyer")
+
+pred.tasks <- list(
+  makeClassifTask('match', input.by.match, 'result'),
+  makeClassifTask('match.and.team', input.by.match.and.team, 'result'),
+  makeClassifTask('match.normalized', normalizeFeatures(input.by.match), 'result'),
+  makeClassifTask('match.and.team.normalized', normalizeFeatures(input.by.match.and.team), 'result')
+)
+pred.learners <- list(
+  # support feature importance OOB
+  makeLearner('classif.boosting', predict.type='prob'),
+  makeLearner('classif.cforest', predict.type='prob'),
+  makeLearner('classif.gbm', predict.type='prob'),
+  makeLearner('classif.randomForestSRC', predict.type='prob'),
+  makeLearner('classif.rpart', predict.type='prob'),
+  makeLearner('classif.RRF', predict.type='prob'),
+  makeLearner('classif.xgboost', predict.type='prob'),
+  # don't support feature importance OOB
+  makeLearner('classif.adaboostm1', predict.type='prob'),
+  makeLearner('classif.extraTrees', predict.type='prob'),
+  makeLearner('classif.glmnet', predict.type='prob'),
+  makeLearner('classif.lda', predict.type='prob'),
+  makeLearner('classif.naiveBayes', predict.type='prob'),
+  makeLearner('classif.nnet', predict.type='prob'),
+  makeLearner('classif.svm', predict.type='prob')
+)
+pred.measures <- list(kappa, logloss, acc, multiclass.au1p, multiclass.au1u, multiclass.aunp, multiclass.aunu, multiclass.brier, multiclass.mcc)
+pred.benchmark <- benchmark(learners=pred.learners, tasks=pred.tasks, resamplings=hout, measures=pred.measures, show.info=FALSE)
+pred.performances <- getBMRAggrPerformances(pred.benchmark, as.df=TRUE)
+```
