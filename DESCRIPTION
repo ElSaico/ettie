@@ -13,11 +13,12 @@ LazyData: true
 Imports: 
     packrat,
     fst,
-    future.apply,
     jsonlite,
+    future.apply,
     data.table,
     tidyverse,
-    mlr
+    mlr,
+    StatsBombR
 Remotes:
     statsbomb/StatsBombR
 URL: https://github.com/ElSaico/ettie
