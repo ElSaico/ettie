@@ -16,7 +16,8 @@ Imports:
     future.apply,
     jsonlite,
     data.table,
-    tidyverse
+    tidyverse,
+    mlr
 Remotes:
     statsbomb/StatsBombR
 URL: https://github.com/ElSaico/ettie

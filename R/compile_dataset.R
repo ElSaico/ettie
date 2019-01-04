@@ -4,7 +4,7 @@ library(future.apply)
 library(jsonlite)
 library(StatsBombR)
 
-make.dataset <- function() {
+compile.dataset <- function() {
   plan(multiprocess)
 
   competitions <- fromJSON("data/statsbomb/data/competitions.json")
