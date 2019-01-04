@@ -1,4 +1,5 @@
 ^\.travis\.yml$
+^data/
 ^packrat/
 ^\.Rprofile$
 ^.*\.Rproj$

@@ -22,3 +22,4 @@ Remotes:
     statsbomb/StatsBombR
 URL: https://github.com/ElSaico/ettie
 BugReports: https://github.com/ElSaico/ettie/issues
+RoxygenNote: 6.1.1
