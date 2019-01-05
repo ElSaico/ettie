@@ -1,15 +1,16 @@
+library(dplyr)
 library(mlr)
 
 run.benchmark <- function(matches, metrics, seed = 8080) {
   set.seed(seed, "L'Ecuyer")
-  input.by.match <- build.input(matches, metrics)
-  input.by.match.and.team <- build.input(matches, metrics, TRUE)
+  input.wl <- build.input.wl(matches, metrics)
+  input.wc <- build.input.wc(matches, metrics)
 
   pred.tasks <- list(
-    makeClassifTask("match", input.by.match, "result"),
-    makeClassifTask("match.and.team", input.by.match.and.team, "result"),
-    makeClassifTask("match.normalized", normalizeFeatures(input.by.match), "result"),
-    makeClassifTask("match.and.team.normalized", normalizeFeatures(input.by.match.and.team), "result")
+    makeClassifTask("women.league", input.wl, "result"),
+    makeClassifTask("world.cup", input.wc, "result"),
+    makeClassifTask("women.league.normalized", normalizeFeatures(input.wl), "result"),
+    makeClassifTask("world.cup.normalized", normalizeFeatures(input.wc), "result")
   )
   pred.learners <- list(
     # support feature importance OOB
