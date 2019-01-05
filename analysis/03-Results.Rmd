@@ -1,0 +1,25 @@
+---
+title: "R Notebook"
+---
+
+```{r}
+library(fst)
+library(jsonlite)
+
+data <- list(
+  competitions = fromJSON("../data/statsbomb/data/competitions.json"),
+  matches = read.fst('../data/matches-20181231.fst'),
+  events = read.fst('../data/events-20181231.fst')
+)
+data$events <- make.features(data$events)
+data$metrics <- build.metrics(data$events)
+results <- run.benchmark(data$matches, data$metrics)
+```
+
+```{r}
+library(ggpubr)
+library(mlr)
+
+# TODO: use friendlier names on both axis
+ggarrange(plotlist=lapply(getBMRMeasures(result), plotBMRSummary, bmr=result), common.legend=TRUE)
+```
