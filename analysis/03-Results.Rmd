@@ -1,10 +1,12 @@
 ---
-title: "R Notebook"
+title: "Results"
 ---
 
 ```{r}
 library(fst)
 library(jsonlite)
+library(mlr)
+library(tidyr)
 
 data <- list(
   competitions = fromJSON("../data/statsbomb/data/competitions.json"),
@@ -14,12 +16,36 @@ data <- list(
 data$events <- make.features(data$events)
 data$metrics <- build.metrics(data$events)
 results <- run.benchmark(data$matches, data$metrics)
+performances <- getBMRAggrPerformances(result, as.df=TRUE)
 ```
 
 ```{r}
 library(ggpubr)
-library(mlr)
 
-# TODO: use friendlier names on both axis
-ggarrange(plotlist=lapply(getBMRMeasures(result), plotBMRSummary, bmr=result), common.legend=TRUE)
+performances.per.measure <- performances %>%
+  gather(measure, mean, -task.id, -learner.id) %>%
+  mutate(
+    normalized=if_else(endsWith(as.character(task.id), '.normalized'), "Normalized", "Not normalized"),
+    task.id=recode(task.id,
+                   women.league="Women's championships",
+                   women.league.normalized="Women's championships",
+                   world.cup="FIFA World Cup",
+                   world.cup.normalized="FIFA World Cup"),
+    learner.id=sub("classif.", "", learner.id),
+    measure=recode(measure,
+                   kappa.test.mean="Cohen's kappa",
+                   logloss.test.mean="Logarithmic loss",
+                   acc.test.mean="Accuracy",
+                   multiclass.au1p.test.mean="AUC (weighted average 1v1)",
+                   multiclass.au1u.test.mean="AUC (average 1v1)",
+                   multiclass.aunp.test.mean="AUC (weighted average 1vN)",
+                   multiclass.aunu.test.mean="AUC (average 1vN)",
+                   multiclass.brier.test.mean="Brier score",
+                   multiclass.mcc.test.mean="Matthews correlation coefficient")
+  )
+# TODO:
+# - make each individual x-axis scale independent
+# - make measure names fully visible
+ggdotplot(performances.per.measure, x='mean', y='task.id', facet.by=c('measure', 'normalized'), 
+          color='learner.id', xlab='Mean value', ylab=FALSE, legend.title='')
 ```

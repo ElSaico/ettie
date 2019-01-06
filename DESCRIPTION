@@ -17,7 +17,8 @@ Imports:
     data.table,
     tidyverse,
     mlr,
-    StatsBombR
+    StatsBombR,
+    ggpubr
 Remotes:
     statsbomb/StatsBombR
 URL: https://github.com/ElSaico/ettie
