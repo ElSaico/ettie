@@ -1,5 +1,5 @@
 Package: ettie
-Title: Tactical football nugget search
+Title: Tactical Football Nugget Search
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Bruno",
@@ -11,14 +11,27 @@ License: MPL-2.0
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    packrat,
-    jsonlite,
-    future.apply,
+    adabag,
     data.table,
-    tidyverse,
+    dplyr,
+    e1071,
+    extraTrees,
+    gbm,
+    ggpubr,
+    glmnet,
+    magrittr,
     mlr,
+    packrat,
+    party,
+    purrr,
+    randomForestSRC,
+    rlang,
+    RRF,
+    RWeka,
     StatsBombR,
-    ggpubr
+    tibble,
+    xgboost,
+    yardstick
 Remotes:
     statsbomb/StatsBombR
 URL: https://github.com/ElSaico/ettie

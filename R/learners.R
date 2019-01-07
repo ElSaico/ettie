@@ -1,6 +1,4 @@
-library(mlr)
-
-multiclass.mcc <- makeMeasure(
+multiclass.mcc <- mlr::makeMeasure(
   id = "multiclass.mcc",
   name = "Multiclass Matthews correlation coefficient",
   minimize = FALSE,
@@ -8,6 +6,6 @@ multiclass.mcc <- makeMeasure(
   best = 1,
   worst = -1,
   fun = function(task, model, pred, feats, extra.args) {
-    yardstick::mcc(getTaskData(task), getPredictionTruth(pred), getPredictionResponse(pred))$.estimate
+    yardstick::mcc(mlr::getTaskData(task), mlr::getPredictionTruth(pred), mlr::getPredictionResponse(pred))$.estimate
   }
 )

@@ -3,24 +3,24 @@ title: "Results"
 ---
 
 ```{r}
-library(fst)
-library(jsonlite)
+library(ettie)
 library(mlr)
-library(tidyr)
 
-data <- list(
-  competitions = fromJSON("../data/statsbomb/data/competitions.json"),
-  matches = read.fst('../data/matches-20181231.fst'),
-  events = read.fst('../data/events-20181231.fst')
-)
+data <- compile.dataset()
 data$events <- make.features(data$events)
-data$metrics <- build.metrics(data$events)
-results <- run.benchmark(data$matches, data$metrics)
-performances <- getBMRAggrPerformances(result, as.df=TRUE)
+# or (when data is backed up)
+#data <- list(
+#  events = fst::read.fst('../data/events-20190107.fst'),
+#  matches = fst::read.fst('../data/matches-20190107.fst')
+#)
+results <- run.benchmark(data)
+performances <- getBMRAggrPerformances(results, as.df=TRUE)
 ```
 
 ```{r}
+library(dplyr)
 library(ggpubr)
+library(tidyr)
 
 performances.per.measure <- performances %>%
   gather(measure, mean, -task.id, -learner.id) %>%
