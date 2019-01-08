@@ -21,6 +21,7 @@ Imports:
     glmnet,
     magrittr,
     mlr,
+    mlrHyperopt,
     packrat,
     party,
     purrr,
@@ -33,6 +34,7 @@ Imports:
     xgboost,
     yardstick
 Remotes:
+    jakob-r/mlrHyperopt,
     statsbomb/StatsBombR
 URL: https://github.com/ElSaico/ettie
 BugReports: https://github.com/ElSaico/ettie/issues
