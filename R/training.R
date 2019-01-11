@@ -1,6 +1,8 @@
 #' @export
-run.benchmark <- function(data, seed = 8080) {
+run.benchmark <- function(data, seed = 8080, tune.budget = 200, parallel = FALSE) {
   set.seed(seed, "L'Ecuyer")
+  mlr::configureMlr(show.info = FALSE, on.learner.error = "warn")
+
   input.wl <- build.input.wl(data)
   input.wc <- build.input.wc(data)
 
@@ -10,7 +12,7 @@ run.benchmark <- function(data, seed = 8080) {
     mlr::makeClassifTask("women.league.normalized", mlr::normalizeFeatures(input.wl), "result"),
     mlr::makeClassifTask("world.cup.normalized", mlr::normalizeFeatures(input.wc), "result")
   )
-  pred.tuner <- mlr::makeTuneControlRandom()
+  pred.tuner <- mlr::makeTuneControlIrace(budget = tune.budget)
   pred.learners <- list(
     # support feature importance OOB
     mlr::makeLearner("classif.boosting", predict.type = "prob"),
@@ -30,7 +32,10 @@ run.benchmark <- function(data, seed = 8080) {
     mlr::makeLearner("classif.svm", predict.type = "prob")
   )
   pred.learners.tuned <- lapply(pred.learners, function(l) {
-    par.set <- tryCatch(mlrHyperopt::getParConfigParSet(mlrHyperopt::getDefaultParConfig(l)),
+    # getDefaultParConfig sets a few data-dependent hyperparameter boundaries
+    # so we use one of input.wl's tasks since it's larger on both dimensions
+    par.set <- tryCatch(
+      mlrHyperopt::getParConfigParSet(mlrHyperopt::getDefaultParConfig(l), pred.tasks[[1]]),
       error = function(e) NULL
     )
     if (!is.null(par.set)) {
@@ -42,8 +47,21 @@ run.benchmark <- function(data, seed = 8080) {
     mlr::multiclass.aunp, mlr::multiclass.aunu, mlr::multiclass.brier, multiclass.mcc
   )
 
-  mlr::benchmark(
-    learners = c(pred.learners, pred.learners.tuned), tasks = pred.tasks,
-    resamplings = mlr::hout, measures = pred.measures, show.info = FALSE
-  )
+  if (parallel) {
+    reg <- batchtools::makeExperimentRegistry(file.dir = NA, seed = seed)
+    # trading multicore's smaller overhead for Windows compatibility
+    reg$cluster.functions <- batchtools::makeClusterFunctionsSocket()
+    jobs <- mlr::batchmark(
+      learners = c(pred.learners, pred.learners.tuned), tasks = pred.tasks,
+      resamplings = mlr::hout, measures = pred.measures
+    )
+    batchtools::submitJobs(jobs)
+    batchtools::waitForJobs(jobs)
+    mlr::reduceBatchmarkResults(jobs)
+  } else {
+    mlr::benchmark(
+      learners = c(pred.learners, pred.learners.tuned), tasks = pred.tasks,
+      resamplings = mlr::hout, measures = pred.measures
+    )
+  }
 }

@@ -33,6 +33,9 @@ Imports:
     tibble,
     xgboost,
     yardstick
+Suggests:
+    batchtools,
+    snow
 Remotes:
     jakob-r/mlrHyperopt,
     statsbomb/StatsBombR
