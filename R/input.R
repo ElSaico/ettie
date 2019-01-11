@@ -21,7 +21,7 @@ build.metrics <- function(events) {
     stats::na.omit() %>%
     dplyr::group_by(.data$match_id, .data$team.name) %>%
     dplyr::summarise(avg.player.possession = mean(.data$PlayerPossessionTime)) %>%
-    dplyr::full_join(metrics)
+    dplyr::full_join(metrics, c("match_id", "team.name"))
 
   metrics <- events %>%
     dplyr::select(.data$match_id, .data$possession_team.name, .data$OffensivePhase, .data$TimeInLastDefensivePhase) %>%
@@ -30,7 +30,7 @@ build.metrics <- function(events) {
     stats::na.omit() %>%
     dplyr::group_by(.data$match_id, .data$team.name) %>%
     dplyr::summarise(avg.recovery.time = mean(.data$TimeInLastDefensivePhase)) %>%
-    dplyr::full_join(metrics)
+    dplyr::full_join(metrics, c("match_id", "team.name"))
 
   metrics
 }
