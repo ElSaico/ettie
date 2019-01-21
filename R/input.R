@@ -36,31 +36,23 @@ build.metrics <- function(events) {
 }
 
 #' @export
-build.input.wl <- function(data) {
-  matches <- dplyr::filter(data$matches, .data$competition.competition_name != "FIFA World Cup")
+build.input <- function(data) {
   metrics <- build.metrics(data$events[data$events$match_id %in% data$matches$match_id, ])
-  home.teams <- matches %>%
+  home.teams <- data$matches %>%
     dplyr::inner_join(metrics, c("match_id", "home_team.home_team_name" = "team.name")) %>%
     dplyr::inner_join(metrics, c("match_id", "away_team.away_team_name" = "team.name"), suffix = c(".team", ".adv")) %>%
-    dplyr::mutate(home = 1, result = factor(dplyr::case_when(.data$home_score > .data$away_score ~ "win", .data$home_score < .data$away_score ~ "loss", TRUE ~ "draw")))
-  away.teams <- matches %>%
+    dplyr::mutate(
+      women = as.numeric(.data$competition.competition_name != "FIFA World Cup"),
+      home = .data$women,
+      result = factor(dplyr::case_when(.data$home_score > .data$away_score ~ "win", .data$home_score < .data$away_score ~ "loss", TRUE ~ "draw"))
+    )
+  away.teams <- data$matches %>%
     dplyr::inner_join(metrics, c("match_id", "away_team.away_team_name" = "team.name")) %>%
     dplyr::inner_join(metrics, c("match_id", "home_team.home_team_name" = "team.name"), suffix = c(".team", ".adv")) %>%
-    dplyr::mutate(home = 0, result = factor(dplyr::case_when(.data$home_score < .data$away_score ~ "win", .data$home_score > .data$away_score ~ "loss", TRUE ~ "draw")))
-  rbind(home.teams, away.teams) %>% dplyr::select(.data$result, dplyr::ends_with(".team"), dplyr::ends_with(".adv"))
-}
-
-#' @export
-build.input.wc <- function(data) {
-  matches <- dplyr::filter(data$matches, .data$competition.competition_name == "FIFA World Cup")
-  metrics <- build.metrics(data$events[data$events$match_id %in% data$matches$match_id, ])
-  home.teams <- matches %>%
-    dplyr::inner_join(metrics, c("match_id", "home_team.home_team_name" = "team.name")) %>%
-    dplyr::inner_join(metrics, c("match_id", "away_team.away_team_name" = "team.name"), suffix = c(".team", ".adv")) %>%
-    dplyr::mutate(result = factor(dplyr::case_when(.data$home_score > .data$away_score ~ "win", .data$home_score < .data$away_score ~ "loss", TRUE ~ "draw")))
-  away.teams <- matches %>%
-    dplyr::inner_join(metrics, c("match_id", "away_team.away_team_name" = "team.name")) %>%
-    dplyr::inner_join(metrics, c("match_id", "home_team.home_team_name" = "team.name"), suffix = c(".team", ".adv")) %>%
-    dplyr::mutate(result = factor(dplyr::case_when(.data$home_score < .data$away_score ~ "win", .data$home_score > .data$away_score ~ "loss", TRUE ~ "draw")))
-  rbind(home.teams, away.teams) %>% dplyr::select(.data$result, dplyr::ends_with(".team"), dplyr::ends_with(".adv"))
+    dplyr::mutate(
+      women = as.numeric(.data$competition.competition_name != "FIFA World Cup"),
+      home = 0,
+      result = factor(dplyr::case_when(.data$home_score < .data$away_score ~ "win", .data$home_score > .data$away_score ~ "loss", TRUE ~ "draw"))
+    )
+  rbind(home.teams, away.teams) %>% dplyr::select(.data$women, .data$home, .data$result, dplyr::ends_with(".team"), dplyr::ends_with(".adv"))
 }

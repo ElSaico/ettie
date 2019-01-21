@@ -13,19 +13,21 @@ LazyData: true
 Imports: 
     adabag,
     data.table,
+    DiceKriging,
     dplyr,
     e1071,
     extraTrees,
-    gbm,
-    ggpubr,
     glmnet,
     magrittr,
     mlr,
-    mlrHyperopt,
+    mlrMBO,
     packrat,
+    ParamHelpers,
     party,
     purrr,
+    randomForest,
     randomForestSRC,
+    rgenoud,
     rlang,
     RRF,
     RWeka,
@@ -35,9 +37,9 @@ Imports:
     yardstick
 Suggests:
     batchtools,
+    ggpubr,
     snow
 Remotes:
-    jakob-r/mlrHyperopt,
     statsbomb/StatsBombR
 URL: https://github.com/ElSaico/ettie
 BugReports: https://github.com/ElSaico/ettie/issues
