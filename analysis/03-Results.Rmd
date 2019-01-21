@@ -13,8 +13,8 @@ data$events <- make.features(data$events)
 #  events = fst::read.fst('../data/events-20190107.fst'),
 #  matches = fst::read.fst('../data/matches-20190107.fst')
 #)
-results <- run.benchmark(data)
-performances <- getBMRAggrPerformances(results, as.df=TRUE)
+results <- run.benchmark(data, parallel = TRUE)
+performances <- getBMRAggrPerformances(results, as.df = TRUE)
 ```
 
 ```{r}
@@ -25,27 +25,17 @@ library(tidyr)
 performances.per.measure <- performances %>%
   gather(measure, mean, -task.id, -learner.id) %>%
   mutate(
-    normalized=if_else(endsWith(as.character(task.id), '.normalized'), "Normalized", "Not normalized"),
-    task.id=recode(task.id,
-                   women.league="Women's championships",
-                   women.league.normalized="Women's championships",
-                   world.cup="FIFA World Cup",
-                   world.cup.normalized="FIFA World Cup"),
-    learner.id=sub("classif.", "", learner.id),
+    learner.id=sub("^classif\\.(.*?)(\\.tuned)?$", "\\1", learner.id),
     measure=recode(measure,
                    kappa.test.mean="Cohen's kappa",
                    logloss.test.mean="Logarithmic loss",
                    acc.test.mean="Accuracy",
-                   multiclass.au1p.test.mean="AUC (weighted average 1v1)",
-                   multiclass.au1u.test.mean="AUC (average 1v1)",
-                   multiclass.aunp.test.mean="AUC (weighted average 1vN)",
-                   multiclass.aunu.test.mean="AUC (average 1vN)",
+                   multiclass.aunu.test.mean="AUC",
                    multiclass.brier.test.mean="Brier score",
                    multiclass.mcc.test.mean="Matthews correlation coefficient")
   )
-# TODO:
-# - make each individual x-axis scale independent
-# - make measure names fully visible
-ggdotplot(performances.per.measure, x='mean', y='task.id', facet.by=c('measure', 'normalized'), 
-          color='learner.id', xlab='Mean value', ylab=FALSE, legend.title='')
+# TODO: make each individual x-axis scale independent
+ggbarplot(performances.per.measure, x = 'learner.id', y = 'mean', facet.by = 'measure',
+          fill = 'learner.id', color = 'learner.id', xlab = FALSE, ylab = FALSE,
+          x.text.angle = 45, legend = 'none')
 ```
