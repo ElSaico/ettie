@@ -36,7 +36,7 @@ build.metrics <- function(events) {
 }
 
 #' @export
-build.input <- function(data) {
+build.input.classification <- function(data) {
   metrics <- build.metrics(data$events[data$events$match_id %in% data$matches$match_id, ])
   home.teams <- data$matches %>%
     dplyr::inner_join(metrics, c("match_id", "home_team.home_team_name" = "team.name")) %>%
@@ -55,4 +55,26 @@ build.input <- function(data) {
       result = factor(dplyr::case_when(.data$home_score < .data$away_score ~ "win", .data$home_score > .data$away_score ~ "loss", TRUE ~ "draw"))
     )
   rbind(home.teams, away.teams) %>% dplyr::select(.data$women, .data$home, .data$result, dplyr::ends_with(".team"), dplyr::ends_with(".adv"))
+}
+
+#' @export
+build.input.regression <- function(data) {
+  metrics <- build.metrics(data$events[data$events$match_id %in% data$matches$match_id, ])
+  home.teams <- data$matches %>%
+    dplyr::inner_join(metrics, c("match_id", "home_team.home_team_name" = "team.name")) %>%
+    dplyr::inner_join(metrics, c("match_id", "away_team.away_team_name" = "team.name"), suffix = c(".team", ".adv")) %>%
+    dplyr::mutate(
+      women = as.numeric(.data$competition.competition_name != "FIFA World Cup"),
+      home = .data$women,
+      goal.difference = .data$home_score - .data$away_score
+    )
+  away.teams <- data$matches %>%
+    dplyr::inner_join(metrics, c("match_id", "away_team.away_team_name" = "team.name")) %>%
+    dplyr::inner_join(metrics, c("match_id", "home_team.home_team_name" = "team.name"), suffix = c(".team", ".adv")) %>%
+    dplyr::mutate(
+      women = as.numeric(.data$competition.competition_name != "FIFA World Cup"),
+      home = 0,
+      goal.difference = .data$away_score - .data$home_score
+    )
+  rbind(home.teams, away.teams) %>% dplyr::select(.data$women, .data$home, .data$goal.difference, dplyr::ends_with(".team"), dplyr::ends_with(".adv"))
 }

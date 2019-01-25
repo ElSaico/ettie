@@ -13,7 +13,8 @@ data$events <- make.features(data$events)
 #  events = fst::read.fst('../data/events-20190107.fst'),
 #  matches = fst::read.fst('../data/matches-20190107.fst')
 #)
-results <- run.benchmark(data, parallel = TRUE)
+input <- build.input(data)
+results <- run.benchmark(input, parallel = TRUE)
 performances <- getBMRAggrPerformances(results, as.df = TRUE)
 ```
 
@@ -34,8 +35,23 @@ performances.per.measure <- performances %>%
                    multiclass.brier.test.mean="Brier score",
                    multiclass.mcc.test.mean="Matthews correlation coefficient")
   )
-# TODO: make each individual x-axis scale independent
-ggbarplot(performances.per.measure, x = 'learner.id', y = 'mean', facet.by = 'measure',
-          fill = 'learner.id', color = 'learner.id', xlab = FALSE, ylab = FALSE,
-          x.text.angle = 45, legend = 'none')
+ggbarplot(performances.per.measure, x = 'learner.id', y = 'mean', fill = 'learner.id', color = 'learner.id',
+          xlab = FALSE, ylab = FALSE, x.text.angle = 45, legend = 'none') + facet_wrap('measure', scales='free_y')
+```
+
+extraTrees, glmnet e lda se destacam
+
+```{r}
+library(iml)
+
+plotCalibration(generateCalibrationData(results, breaks = seq(0, 1, 0.05)))
+
+models.et <- getBMRModels(results, 'match.result', 'classif.glmnet.tuned', drop = TRUE)
+predictor.et <- Predictor$new(models.et[[1]], input)
+ale.et <- FeatureEffect$new(predictor.et, 'avg.recovery.time.team')
+# PDP/ALE
+# ICE
+# VIN
+# Friedman H
+# LIME/aLIME/Shapely
 ```
