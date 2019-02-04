@@ -8,7 +8,7 @@ build.metrics <- function(events) {
       shots = sum(.data$type.name == "Shot"),
       expulsions = sum(.data$foul_committed.card.name %in% c("Red Card", "Second Yellow")) + sum(.data$bad_behaviour.card.name %in% c("Red Card", "Second Yellow")),
       passes = sum(.data$type.name == "Pass"),
-      successful.passes = sum(.data$type.name == "Ball Receipt*"),
+      passes.success.rate = sum(.data$type.name == "Ball Receipt*") / sum(.data$type.name == "Pass"),
       corners = sum(.data$pass.type.name == "Corner", na.rm = TRUE),
       fouls = sum(.data$type.name == "Foul Committed"),
       avg.team.possession = mean(.data$PossessionRate, na.rm = TRUE)
