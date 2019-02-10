@@ -44,14 +44,27 @@ extraTrees, glmnet e lda se destacam
 ```{r}
 library(iml)
 
-plotCalibration(generateCalibrationData(results, breaks = seq(0, 1, 0.05)))
+#plotCalibration(generateCalibrationData(results, breaks = seq(0, 1, 0.05)))
+
+#doParallel::registerDoParallel()
+features.et <- c(
+  "avg.recovery.time.team", "avg.player.possession.team", "avg.team.possession.team",
+  "shots.team", "expulsions.team", "passes.team", "successful.passes.team",
+  "corners.team", "fouls.team", "home"
+)
 
 models.et <- getBMRModels(results, 'match.result', 'classif.glmnet.tuned', drop = TRUE)
 predictor.et <- Predictor$new(models.et[[1]], input)
-ale.et <- FeatureEffect$new(predictor.et, 'avg.recovery.time.team')
-# PDP/ALE
-# ICE
+ale.et <- FeatureEffects$new(predictor.et, features.et, "ale")
+ale.et$plot(ncols = 2)
+ice.et <- FeatureEffects$new(predictor.et, features.et, "ice")
+ice.et$plot(ncols = 2)
+lime.et <- LocalModel$new(predictor.et, input[1,], k = 10)
+plot(lime.et)
+shapley.et <- Shapley$new(predictor.et, input[1,])
+shapley.et$plot()
 # VIN
 # Friedman H
-# LIME/aLIME/Shapely
+# LIME/aLIME
+# SHAP
 ```
