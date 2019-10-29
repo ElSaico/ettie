@@ -4,24 +4,32 @@
 #' @export
 compile.dataset <- function() {
   competitions <- StatsBombR::FreeCompetitions()
-  matches <- StatsBombR::FreeMatches(competitions$competition_id)
+  matches <- StatsBombR::FreeMatches(competitions)
   events <- StatsBombR::StatsBombFreeEvents(matches)
   # TODO unpack lists in lineups$lineup
   # lineups <- StatsBombR::StatsBombFreeLineups(matches)
+
+  matches <- tidyr::unnest(matches, c(.data$home_team.managers, .data$away_team.managers), names_sep='.', keep_empty=TRUE)
 
   events <- StatsBombR::allclean(events)
   goalkeeper.not.null <- events$goalkeeper.end_location != "NULL"
   events$goalkeeper.end_location.x <- purrr::modify_if(events$goalkeeper.end_location, goalkeeper.not.null, dplyr::first)
   events$goalkeeper.end_location.y <- purrr::modify_if(events$goalkeeper.end_location, goalkeeper.not.null, dplyr::last)
+  carry.not.null <- events$carry.end_location != "NULL"
+  events$carry.end_location.x <- purrr::modify_if(events$carry.end_location, carry.not.null, dplyr::first)
+  events$carry.end_location.y <- purrr::modify_if(events$carry.end_location, carry.not.null, dplyr::last)
   events <- dplyr::select(
     events, -c(
       .data$related_events, .data$location, .data$tactics.lineup, .data$pass.end_location,
-      .data$shot.end_location, .data$shot.freeze_frame, .data$goalkeeper.end_location
+      .data$shot.end_location, .data$shot.freeze_frame, .data$goalkeeper.end_location,
+      .data$carry.end_location
     )
   )
   events[events == "NULL"] <- NA
   events$goalkeeper.end_location.x <- unlist(events$goalkeeper.end_location.x)
   events$goalkeeper.end_location.y <- unlist(events$goalkeeper.end_location.y)
+  events$carry.end_location.x <- unlist(events$carry.end_location.x)
+  events$carry.end_location.y <- unlist(events$carry.end_location.y)
 
   list(matches = matches, events = events)
 }
