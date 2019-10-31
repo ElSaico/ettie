@@ -42,15 +42,16 @@ build.input.classification <- function(data) {
     dplyr::inner_join(metrics, c("match_id", "home_team.home_team_name" = "team.name")) %>%
     dplyr::inner_join(metrics, c("match_id", "away_team.away_team_name" = "team.name"), suffix = c(".team", ".adv")) %>%
     dplyr::mutate(
-      women = as.numeric(.data$competition.competition_name != "FIFA World Cup"),
-      home = .data$women,
+      women = as.numeric(.data$home_team.home_team_gender = "female"),
+      # FIXME need a less brittle way to check for neutral-venue matches; this fails if we get e.g. UCL finals
+      home = !endsWith(.data$competition.competition_name, "World Cup"),
       result = factor(dplyr::case_when(.data$home_score > .data$away_score ~ "win", .data$home_score < .data$away_score ~ "loss", TRUE ~ "draw"))
     )
   away.teams <- data$matches %>%
     dplyr::inner_join(metrics, c("match_id", "away_team.away_team_name" = "team.name")) %>%
     dplyr::inner_join(metrics, c("match_id", "home_team.home_team_name" = "team.name"), suffix = c(".team", ".adv")) %>%
     dplyr::mutate(
-      women = as.numeric(.data$competition.competition_name != "FIFA World Cup"),
+      women = as.numeric(.data$away_team.away_team_gender = "female"),
       home = 0,
       result = factor(dplyr::case_when(.data$home_score < .data$away_score ~ "win", .data$home_score > .data$away_score ~ "loss", TRUE ~ "draw"))
     )
@@ -64,15 +65,16 @@ build.input.regression <- function(data) {
     dplyr::inner_join(metrics, c("match_id", "home_team.home_team_name" = "team.name")) %>%
     dplyr::inner_join(metrics, c("match_id", "away_team.away_team_name" = "team.name"), suffix = c(".team", ".adv")) %>%
     dplyr::mutate(
-      women = as.numeric(.data$competition.competition_name != "FIFA World Cup"),
-      home = .data$women,
+      women = as.numeric(.data$home_team.home_team_gender = "female"),
+      # FIXME need a less brittle way to check for neutral-venue matches; this fails if we get e.g. UCL finals
+      home = !endsWith(.data$competition.competition_name, "World Cup"),
       goal.difference = .data$home_score - .data$away_score
     )
   away.teams <- data$matches %>%
     dplyr::inner_join(metrics, c("match_id", "away_team.away_team_name" = "team.name")) %>%
     dplyr::inner_join(metrics, c("match_id", "home_team.home_team_name" = "team.name"), suffix = c(".team", ".adv")) %>%
     dplyr::mutate(
-      women = as.numeric(.data$competition.competition_name != "FIFA World Cup"),
+      women = as.numeric(.data$away_team.away_team_gender = "female"),
       home = 0,
       goal.difference = .data$away_score - .data$home_score
     )
