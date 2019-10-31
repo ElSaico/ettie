@@ -33,6 +33,7 @@ Imports:
     RWeka,
     StatsBombR,
     tibble,
+    verification,
     xgboost,
     yardstick
 Suggests:
